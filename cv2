@@ -1,0 +1,50 @@
+L = 6
+K = 7
+
+lambda = function(t) { 100 + 50/exp((t - 420)^2/(3600*L)) + 100/exp((L*(t - 480 - 30*L)^2)/360000)}
+
+period = 24*60; #denni perioda v minutach
+t=seq(0, period-1) #Pocet minut ve dnu, pocitano od nuly 
+
+#II
+zobrazeni_prichodu = K * 10
+
+
+n = K*10 # n = počet příchodů k zobrazení
+event = numeric(195000) # pole událostí, alokováno na 195 000 hodnot, zbytek se bude realokovat po jedničce (předpokládané výsledná velikost je kolem 200 000)delta = 1/1000 # Delta t, konstanta, díky které získáme přibližný počet příchodů za minutu jako naše střední hodnota lambda(t)
+index = 0;
+for (tau in seq(0, period-1)){ # tau = aktuální bod na časové ose v minutách z intervalu jednoho dne (0,1399)
+  testValue = lambda(tau) * delta
+  for(i in as.numeric(1:1000)){
+    rand = runif(1, min=0, max=1)
+    # podmínka, zaručující přibližný počet příchodů za minutu jako lambda(t)
+    if (rand < testValue){
+      event[index] = tau + runif(1,min=0, max = 1);
+      index = index + 1;
+    }
+  }
+}
+# Pro změnu plot range, stačí přidat parametr "xlim=c(0,0.8)"
+png("firstnevents.png");
+eventGrid = numeric(n) # Mřížka nul pro vykreslení grafu
+plot (sort(event)[0:n], eventGrid, ann=FALSE, ) # Vykreslení grafu časů příchodů
+axis(1, at = seq(0, 0.8, by = 0.1))
+title(main="Časy prvních 70 příchodů", font.main=3)
+title(xlab="Čas t [min]")
+dev.off(); 
+
+
+#2.III
+windows()
+png("alldayevents.png");
+eventHist = hist(event, breaks = seq(0,period), plot = FALSE);
+#Vykreslí experimentalne zjistena data
+plot (y=eventHist$counts,x=eventHist$mids, lwd=0.3, type='l', ann=FALSE, col = "gray")
+lines (t,lambda(t), lty=2, lwd=2, col='red') # Přiloží graf teoretické funkce
+title(main="Četnost příchodů po celý den", font.main=3)
+title(xlab="Čas t [min]")
+title(ylab="Příchody za minutu")
+dev.off(); 
+
+
+
